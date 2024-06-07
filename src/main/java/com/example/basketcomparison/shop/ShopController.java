@@ -37,8 +37,8 @@ public class ShopController {
     }
 
     @PostMapping("/calculateBasket")
-    public ResponseEntity<CalcuatedValueOfBasket> calculateMinimumPriceForBasket(@RequestBody List<ProductInBasket> productsInBasket) {
-        CalcuatedValueOfBasket calcuatedValueOfBasket = new CalcuatedValueOfBasket();
+    public ResponseEntity<List<CalcuatedValueOfBasket>> calculateMinimumPriceForBasket(@RequestBody List<ProductInBasket> productsInBasket) {
+        List<CalcuatedValueOfBasket> calcuatedValueOfBasketList = new ArrayList<>();
         List<Shop> shopsWithProduct = new ArrayList<>();
         List<Product> products = new ArrayList<>();
         for(ProductInBasket productInBasket : productsInBasket){
@@ -55,44 +55,33 @@ public class ShopController {
             shopsWithProduct.add(shopService.findShopById(id));
         }
 
-        Map<String, List<Product>> productsGroupedByNameAndSortedByPrice = products.stream()
-                .collect(Collectors.groupingBy(Product::getName,
-                        Collectors.collectingAndThen(
-                                Collectors.toList(),
-                                list -> {
-                                    list.sort(Comparator.comparing(Product::getPrice));
-                                    return list;
-                                }
-                        )
-                ));
-        double amountOfWholeBasket = 0;
-        List<ProductDto> productDtos = new ArrayList<>();
-        for(int i = 0; i < productsInBasket.size(); i++){
-            double priceOfProductsMultipleByQuantity = productsGroupedByNameAndSortedByPrice
-                    .get(productsInBasket.get(i).getProductName())
-                    .get(0).getPrice() * productsInBasket.get(i).getQuantity();
-            amountOfWholeBasket += priceOfProductsMultipleByQuantity;
-            Product product = productsGroupedByNameAndSortedByPrice
-                    .get(productsInBasket.get(i).getProductName())
-                    .get(0);
-            ProductDto productDto = convertToDto(product);
-            productDto.setAmountOfProducts(priceOfProductsMultipleByQuantity);
-            productDtos.add(productDto);
+        for (Shop shop : shopsWithProduct) {
+            CalcuatedValueOfBasket calcuatedValueOfBasket = new CalcuatedValueOfBasket();
+            calcuatedValueOfBasket.setShopName(shop.getName());
+            calcuatedValueOfBasket.setShopId(shop.getId());
+            calcuatedValueOfBasket.setAmount(0);
+            List<Product> productsForShop = products.stream()
+                    .filter(product -> product.getShop().getId() == shop.getId())
+                    .toList();
+            List<ProductDto> productList = new ArrayList<>();
+            for (ProductInBasket productInBasket : productsInBasket) {
+                for (Product product : productsForShop) {
+                    if (productInBasket.getProductName().equals(product.getName())) {
+                        ProductDto productDto = convertToDto(product);
+                        productDto.setAmountOfProducts(product.getPrice() * productInBasket.getQuantity());
+                        productDto.setQuantity(productInBasket.getQuantity());
+                        productList.add(productDto);
+                    }
+                }
+            }
+            calcuatedValueOfBasket.setProducts(productList);
+            calcuatedValueOfBasket.setAmount(productList.stream().mapToDouble(ProductDto::getAmountOfProducts).sum());
+            calcuatedValueOfBasketList.add(calcuatedValueOfBasket);
         }
 
-        calcuatedValueOfBasket.setAmount(amountOfWholeBasket);
-        calcuatedValueOfBasket.setShopId(productsGroupedByNameAndSortedByPrice
-                .get(productsInBasket.get(0).getProductName())
-                .get(0).getShop().getId());
-        calcuatedValueOfBasket.setShopName(productsGroupedByNameAndSortedByPrice
-                .get(productsInBasket.get(0).getProductName())
-                .get(0).getShop().getName());
-        calcuatedValueOfBasket.setProducts(productDtos);
-
-        shopsWithProduct.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(calcuatedValueOfBasket);
+        return ResponseEntity.ok(calcuatedValueOfBasketList.stream()
+                .sorted(Comparator.comparingDouble(CalcuatedValueOfBasket::getAmount)).limit(10)
+                .collect(Collectors.toList()));
     }
 
     private ShopDto convertToDto(Shop shop) {

@@ -18,4 +18,5 @@ public class ProductDto {
     private Long shopId;
     private Long productTypeId;
     private Double amountOfProducts;
+    private Integer quantity;
 }

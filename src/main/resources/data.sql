@@ -41,7 +41,7 @@ INSERT INTO product_types (id, name) VALUES (19, 'Artykuły dla dzieci') ON CONF
 INSERT INTO product_types (id, name) VALUES (20, 'Napoje alkoholowe') ON CONFLICT DO NOTHING;
 
 
-INSERT INTO products (id, name, price, shop_id, product_type_id) VALUES (1, 'Mleko', 3.50, 1, 1) ON CONFLICT DO NOTHING;
+INSERT INTO products (id, name, price, shop_id, product_type_id) VALUES (1, 'Mleko', 30, 1, 1) ON CONFLICT DO NOTHING;
 INSERT INTO products (id, name, price, shop_id, product_type_id) VALUES (2, 'Chleb', 500, 2, 2) ON CONFLICT DO NOTHING;
 INSERT INTO products (id, name, price, shop_id, product_type_id) VALUES (3, 'Sok Pomarańczowy', 4.50, 3, 3) ON CONFLICT DO NOTHING;
 INSERT INTO products (id, name, price, shop_id, product_type_id) VALUES (4, 'Kiełbasa', 15.00, 4, 4) ON CONFLICT DO NOTHING;
