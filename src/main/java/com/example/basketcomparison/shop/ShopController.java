@@ -74,14 +74,20 @@ public class ShopController {
                     }
                 }
             }
-            calcuatedValueOfBasket.setProducts(productList);
-            calcuatedValueOfBasket.setAmount(productList.stream().mapToDouble(ProductDto::getAmountOfProducts).sum());
-            calcuatedValueOfBasketList.add(calcuatedValueOfBasket);
+            if(productList.size() == productsInBasket.size()){
+                calcuatedValueOfBasket.setProducts(productList);
+                calcuatedValueOfBasket.setAmount(productList.stream().mapToDouble(ProductDto::getAmountOfProducts).sum());
+                calcuatedValueOfBasketList.add(calcuatedValueOfBasket);
+            }
         }
 
-        return ResponseEntity.ok(calcuatedValueOfBasketList.stream()
-                .sorted(Comparator.comparingDouble(CalcuatedValueOfBasket::getAmount)).limit(10)
-                .collect(Collectors.toList()));
+        if(calcuatedValueOfBasketList.isEmpty()){
+            return ResponseEntity.ok(calcuatedValueOfBasketList);
+        } else {
+            return ResponseEntity.ok(calcuatedValueOfBasketList.stream()
+                    .sorted(Comparator.comparingDouble(CalcuatedValueOfBasket::getAmount)).limit(10)
+                    .collect(Collectors.toList()));
+        }
     }
 
     private ShopDto convertToDto(Shop shop) {
